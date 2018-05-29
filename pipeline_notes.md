@@ -10,9 +10,9 @@ commands for download were as follows:
 
 	fastq-dump --outdir --skip-technical --read-filter pass --dumpbase --split-3 --clip SSR_ID
 
-batched processed using "SRA-fetch.sh" 
-SSR_ID's placed in "SSR_set_*.txt"
-screen output saved in SRR_download_log.txt
+batched processed using "SRA-fetch.sh" \
+SSR_ID's placed in "SSR_set_*.txt" \
+screen output saved in SRR_download_log.txt \
 	
 	Do not use --readid flag!! creates different names for each read and causes problems with bwa mem downstream
 
@@ -21,9 +21,9 @@ screen output saved in SRR_download_log.txt
 	
 2 - Quality report generated using fastqc
 
-batch processed using "pretrim-QC.sh" 
-screen output saved in pre_trim_QC_log.txt
-files saved in pre_trim_QC_files/
+batch processed using "pretrim-QC.sh" \
+screen output saved in pre_trim_QC_log.txt \
+files saved in pre_trim_QC_files/ \
 
 need to think about the best course of action here. Is it feasible to QC every sequence before AND after trimming? Or should maybe just check QC after the trimming step (can run fastQC before and after, but maybe just check it after)
 
