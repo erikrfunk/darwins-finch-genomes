@@ -8,11 +8,11 @@ Files and analyses run on Taylor lab server 'Chickadee' in data2/PracticeGenomes
 
 commands for download were as follows: 
 
-fastq-dump --outdir --skip-technical --read-filter pass --dumpbase --split-3 --clip SSR_ID
+	fastq-dump --outdir --skip-technical --read-filter pass --dumpbase --split-3 --clip SSR_ID
 
-	batched processed using "SRA-fetch.sh" 
-	SSR_ID's placed in "SSR_set_*.txt"
-	screen output saved in SRR_download_log.txt
+batched processed using "SRA-fetch.sh" 
+SSR_ID's placed in "SSR_set_*.txt"
+screen output saved in SRR_download_log.txt
 	
 	Do not use --readid flag!! creates different names for each read and causes problems with bwa mem downstream
 
@@ -30,11 +30,11 @@ need to think about the best course of action here. Is it feasible to QC every s
 
 3 - Trimming sequences using TrimmomaticPE 
 
-TrimmomaticPE -threads 6 \
--basein SRRID_pass_1.fastq \
--baseout SRRID_trimmed.fq.gz \
-ILLUMINACLIP:TruSeq3-PE.fa:1:30:10 \
-LEADING:20 TRAILING:20 SLIDINGWINDOW:4:20 MINLEN:90 
+	TrimmomaticPE -threads 6 \
+	-basein SRRID_pass_1.fastq \
+	-baseout SRRID_trimmed.fq.gz \
+	ILLUMINACLIP:TruSeq3-PE.fa:1:30:10 \
+	LEADING:20 TRAILING:20 SLIDINGWINDOW:4:20 MINLEN:90 
 
 
 4 - Post trim QC
@@ -62,14 +62,15 @@ merged unsorted .bam files corresponding to a single sample using
 samtools cat -o 
 
 then sorted the merged .bam file using 
-samtools sort -o sorted_bam_file/samplename.bam -T temp -@ 6 
+	samtools sort -o sorted_bam_file/samplename.bam -T temp -@ 6 
 
 Added read group information --
-picard-tools AddOrReplaceReadGroups \
-I= O= RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=$SAMPLE
+	picard-tools AddOrReplaceReadGroups \
+	I=input/path/to/file O=output/dir \
+	RGLB=lib1 RGPL=illumina RGPU=unit1 RGSM=$SAMPLE
 
 Marked duplicates --
-picard-tools MarkDuplicates I= sampID_sorted.bam O= sampID_sorted_dupmarked.bam M= sampID_dupmarked_metrics.txt
+	picard-tools MarkDuplicates I= sampID_sorted.bam O= sampID_sorted_dupmarked.bam M= sampID_dupmarked_metrics.txt
 
 finally indexed using sorted bam file - .bai files in same folder as sorted .bam
 samtools index 
@@ -85,27 +86,27 @@ samtools faidx GeoFor_1.0_genomic.fna
 
 Haplotype calling done using GATK v4 HaplotypeCaller with the -ERC GVFC flag
 
-gatk HaplotypeCaller \
-   -R reference.fasta \
-   -I bamfile \
-   -O output.g.vcf.gz \  
-   -ERC GVCF
+	gatk HaplotypeCaller \
+   	-R reference.fasta \
+   	-I bamfile \
+   	-O output.g.vcf.gz \  
+   	-ERC GVCF
 
 8 - Merging and Genotyping
 
 per sample gvcf files created by HaplotypeCaller are first merged 
-gatk CombineGVCFs \
--R reference.fasta \
--V sample1.g.vcf.gz \
--V sample2.g.vcf.gz \ ...
--O cohort.g.vcf.gz
+	gatk CombineGVCFs \
+	-R reference.fasta \
+	-V sample1.g.vcf.gz \
+	-V sample2.g.vcf.gz \ ...
+	-O cohort.g.vcf.gz
 
 then perform genotyping on this merged gvcf
-gatk GenotypeGVCFs \
--nt 6 \ # number of threads?
--R reference.fasta \
--V input.g.vcf.gz \
--O output.vcf.gz 
+	gatk GenotypeGVCFs \
+	-nt 6 \ # not sure if this flag is still supported with GATK4
+	-R reference.fasta \
+	-V input.g.vcf.gz \
+	-O output.vcf.gz 
 
 9 - Filtering Variants
 
@@ -125,25 +126,25 @@ MappingQualityRankSumTest (MQRankSum): filter out variants less than -12.5
 ReadPosRankSumTest (ReadPosRankSum): filter out variants less than -8.0
 
 filtration called using SelectVariants
-gatk SelectVariants \
--R reference.fasta \
--V input.vcf \
--o output.vcf \
--select "QD > 2" \
--select "FS < 60" \
--select "MQ > 40" \
--select "MQRankSum > -12.5" \
--select "ReadPosRankSum > -8.0" \
---select-type-to-include SNP 
---exclude-filtered \ # won't include filtered sites
---exclude-non-variants # won't include non-variant sites
+	gatk SelectVariants \
+	-R reference.fasta \
+	-V input.vcf \
+	-o output.vcf \
+	-select "QD > 2" \
+	-select "FS < 60" \
+	-select "MQ > 40" \
+	-select "MQRankSum > -12.5" \
+	-select "ReadPosRankSum > -8.0" \
+	--select-type-to-include SNP 
+	--exclude-filtered \ # won't include filtered sites
+	--exclude-non-variants # won't include non-variant sites
 
 tallied number of SNPs kept using
-gatk VariantsToTable -V input.vcf -F CHROM -F POS -F TYPE -O output.table
+	gatk VariantsToTable -V input.vcf -F CHROM -F POS -F TYPE -O output.table
 
 10 - Phasing with Beagle
 
-java -Xmx4g -jar ~/beagle.16May18.771.jar gt=path/to/genotype/file.vcf out=out_prefix
+	java -Xmx4g -jar ~/beagle.16May18.771.jar gt=path/to/genotype/file.vcf out=out_prefix
 
 could look into specifying genetic map length (I think the recomb. in zebra finch is like 1.5cM?)
 
